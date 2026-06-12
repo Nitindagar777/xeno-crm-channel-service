@@ -131,7 +131,6 @@ function getDashboardHtml() {
     /* KPI Grid */
     .kpi-grid {
       display: grid;
-      grid-cols: 1;
       grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
       gap: 1.5rem;
     }
@@ -170,6 +169,100 @@ function getDashboardHtml() {
     .kpi-desc {
       font-size: 11px;
       color: var(--text-muted);
+    }
+
+    /* Main Grid Layout with Sidebar */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      gap: 1.5rem;
+      align-items: start;
+    }
+
+    @media (max-width: 768px) {
+      .main-layout {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sidebar-card {
+      background-color: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 1.25rem;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      height: 600px;
+    }
+
+    .sidebar-title {
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-secondary);
+      border-b: 1px solid var(--border);
+      padding-bottom: 0.75rem;
+    }
+
+    .campaign-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+      overflow-y: auto;
+      flex: 1;
+      padding-right: 0.25rem;
+    }
+
+    .campaign-list::-webkit-scrollbar {
+      width: 4px;
+    }
+    .campaign-list::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 4px;
+    }
+
+    .campaign-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: var(--bg-dark);
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+      padding: 0.75rem 1rem;
+      border-radius: 10px;
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      text-align: left;
+      transition: all 0.2s;
+      gap: 0.5rem;
+    }
+
+    .campaign-item:hover {
+      color: var(--text-primary);
+      border-color: var(--text-muted);
+    }
+
+    .campaign-item.active {
+      background: linear-gradient(135deg, var(--primary) 0%, #D97706 100%);
+      border-color: var(--primary);
+      color: #fff;
+    }
+
+    .campaign-count-badge {
+      background-color: rgba(255, 255, 255, 0.15);
+      color: inherit;
+      font-size: 9px;
+      font-weight: 700;
+      padding: 0.15rem 0.4rem;
+      border-radius: 4px;
+    }
+
+    .campaign-item.active .campaign-count-badge {
+      background-color: rgba(255, 255, 255, 0.25);
     }
 
     /* Filters and Controls */
@@ -335,7 +428,7 @@ function getDashboardHtml() {
     .status-failed { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.2); color: var(--danger); }
 
     .msg-cell {
-      max-width: 300px;
+      max-width: 280px;
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
@@ -344,6 +437,13 @@ function getDashboardHtml() {
     .msg-mono {
       font-family: 'JetBrains Mono', monospace;
       font-size: 11px;
+    }
+
+    .truncate {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 170px;
     }
 
     .text-center {
@@ -428,71 +528,89 @@ function getDashboardHtml() {
       </div>
     </div>
 
-    <!-- Controls -->
-    <div class="controls-card">
-      <div class="search-row">
-        <input type="text" id="searchInput" class="search-input" placeholder="Search by message text, recipient, or campaign ID...">
-      </div>
-
-      <div class="search-row" style="gap: 1.5rem;">
-        <div class="filter-group">
-          <span class="filter-label">Medium:</span>
-          <button class="filter-btn active" onclick="setMediumFilter('')">All</button>
-          <button class="filter-btn" onclick="setMediumFilter('whatsapp')">WhatsApp</button>
-          <button class="filter-btn" onclick="setMediumFilter('sms')">SMS</button>
-          <button class="filter-btn" onclick="setMediumFilter('email')">Email</button>
-          <button class="filter-btn" onclick="setMediumFilter('rcs')">RCS</button>
-        </div>
-
-        <div class="filter-group">
-          <span class="filter-label">Status:</span>
-          <button class="filter-btn active" onclick="setStatusFilter('')">All</button>
-          <button class="filter-btn" onclick="setStatusFilter('queued')">Queued</button>
-          <button class="filter-btn" onclick="setStatusFilter('sent')">Sent</button>
-          <button class="filter-btn" onclick="setStatusFilter('delivered')">Delivered</button>
-          <button class="filter-btn" onclick="setStatusFilter('read')">Read</button>
-          <button class="filter-btn" onclick="setStatusFilter('clicked')">Clicked</button>
-          <button class="filter-btn" onclick="setStatusFilter('failed')">Failed</button>
+    <!-- Main grid layout -->
+    <div class="main-layout">
+      <!-- Campaigns Sidebar -->
+      <div class="sidebar-card">
+        <div class="sidebar-title">Campaigns Filter</div>
+        <div class="campaign-list" id="campaignsList">
+          <div class="empty-state" style="padding: 1rem; font-size: 10px;">Waiting for campaigns...</div>
         </div>
       </div>
-    </div>
 
-    <!-- Messages List -->
-    <div class="table-card">
-      <div class="table-header">
-        <span class="table-title">Live Simulated Logs</span>
-        <span class="status-badge" style="background:transparent; border:none; padding:0; color:var(--text-muted)">
-          Refreshes every 1.5 seconds
-        </span>
-      </div>
+      <!-- Main Content Area -->
+      <div style="display: flex; flex-direction: column; gap: 1.5rem; min-width: 0;">
+        <!-- Controls -->
+        <div class="controls-card">
+          <div class="search-row">
+            <input type="text" id="searchInput" class="search-input" placeholder="Search by message text, recipient, or campaign ID...">
+          </div>
 
-      <div class="table-container">
-        <table id="logsTable">
-          <thead>
-            <tr>
-              <th>Timestamp</th>
-              <th>Vendor MSG ID</th>
-              <th>Campaign ID</th>
-              <th>Medium</th>
-              <th>Recipient</th>
-              <th>Content preview</th>
-              <th class="text-center">Simulated Status</th>
-            </tr>
-          </thead>
-          <tbody id="logsTableBody">
-            <tr>
-              <td colspan="7" class="empty-state">Loading simulated messages...</td>
-            </tr>
-          </tbody>
-        </table>
+          <div class="search-row" style="gap: 1.5rem;">
+            <div class="filter-group">
+              <span class="filter-label">Medium:</span>
+              <button class="filter-btn active" onclick="setMediumFilter('')">All</button>
+              <button class="filter-btn" onclick="setMediumFilter('whatsapp')">WhatsApp</button>
+              <button class="filter-btn" onclick="setMediumFilter('sms')">SMS</button>
+              <button class="filter-btn" onclick="setMediumFilter('email')">Email</button>
+              <button class="filter-btn" onclick="setMediumFilter('rcs')">RCS</button>
+            </div>
+
+            <div class="filter-group">
+              <span class="filter-label">Status:</span>
+              <button class="filter-btn active" onclick="setStatusFilter('')">All</button>
+              <button class="filter-btn" onclick="setStatusFilter('queued')">Queued</button>
+              <button class="filter-btn" onclick="setStatusFilter('sent')">Sent</button>
+              <button class="filter-btn" onclick="setStatusFilter('delivered')">Delivered</button>
+              <button class="filter-btn" onclick="setStatusFilter('read')">Read</button>
+              <button class="filter-btn" onclick="setStatusFilter('clicked')">Clicked</button>
+              <button class="filter-btn" onclick="setStatusFilter('failed')">Failed</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Messages List -->
+        <div class="table-card">
+          <div class="table-header">
+            <span class="table-title">Live Simulated Logs</span>
+            <span class="status-badge" style="background:transparent; border:none; padding:0; color:var(--text-muted)">
+              Refreshes every 1.5 seconds
+            </span>
+          </div>
+
+          <div class="table-container">
+            <table id="logsTable">
+              <thead>
+                <tr>
+                  <th>Timestamp</th>
+                  <th>Vendor MSG ID</th>
+                  <th>Campaign Name</th>
+                  <th>Medium</th>
+                  <th>Recipient</th>
+                  <th>Content preview</th>
+                  <th class="text-center">Simulated Status</th>
+                </tr>
+              </thead>
+              <tbody id="logsTableBody">
+                <tr>
+                  <td colspan="7" class="empty-state">Loading simulated messages...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <script>
+    const urlParams = new URLSearchParams(window.location.search);
+    const userId = urlParams.get('userId') || '';
+
     let rawMessages = [];
     let activeFilterMedium = '';
     let activeFilterStatus = '';
+    let activeCampaignFilter = '';
     let searchQuery = '';
     let lastSeenCount = 0;
 
@@ -507,6 +625,12 @@ function getDashboardHtml() {
       activeFilterStatus = val;
       updateFilterButtons('Status', val);
       render();
+    }
+
+    function setCampaignFilter(val) {
+      activeCampaignFilter = val;
+      render();
+      renderCampaignSidebar();
     }
 
     function updateFilterButtons(group, activeValue) {
@@ -528,7 +652,7 @@ function getDashboardHtml() {
     // Polling simulated data
     async function fetchMessages() {
       try {
-        const res = await fetch('/api/channel/messages');
+        const res = await fetch(\`/api/channel/messages?userId=\${userId}\`);
         const json = await res.json();
         if (json.success && Array.isArray(json.data)) {
           rawMessages = json.data;
@@ -541,6 +665,7 @@ function getDashboardHtml() {
           lastSeenCount = rawMessages.length;
 
           render();
+          renderCampaignSidebar();
           recalculateStats();
         }
       } catch (err) {
@@ -596,6 +721,46 @@ function getDashboardHtml() {
       return d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     }
 
+    function renderCampaignSidebar() {
+      const sidebar = document.getElementById('campaignsList');
+      if (!sidebar) return;
+
+      const campaigns = [];
+      const seen = new Set();
+
+      rawMessages.forEach(m => {
+        const name = m.campaignName || m.campaignId;
+        if (name && !seen.has(name)) {
+          seen.add(name);
+          campaigns.push({
+            name,
+            count: rawMessages.filter(x => (x.campaignName || x.campaignId) === name).length
+          });
+        }
+      });
+
+      let html = \`
+        <button class="campaign-item \${!activeCampaignFilter ? 'active' : ''}" onclick="setCampaignFilter('')">
+          <span class="truncate">All Campaigns</span>
+          <span class="campaign-count-badge">\${rawMessages.length}</span>
+        </button>
+      \`;
+
+      campaigns.forEach(c => {
+        const isActive = activeCampaignFilter === c.name;
+        // Escape quotes to prevent click handler breakage
+        const escapedName = c.name.replace(/'/g, "\\\\'");
+        html += \`
+          <button class="campaign-item \${isActive ? 'active' : ''}" onclick="setCampaignFilter('\${escapedName}')">
+            <span class="truncate" title="\${c.name}">\${c.name}</span>
+            <span class="campaign-count-badge">\${c.count}</span>
+          </button>
+        \`;
+      });
+
+      sidebar.innerHTML = html;
+    }
+
     function render() {
       const tbody = document.getElementById('logsTableBody');
       
@@ -603,17 +768,19 @@ function getDashboardHtml() {
       const filtered = rawMessages.filter(m => {
         const matchesMedium = !activeFilterMedium || m.channel.toLowerCase() === activeFilterMedium;
         const matchesStatus = !activeFilterStatus || m.status.toLowerCase() === activeFilterStatus;
+        const matchesCampaign = !activeCampaignFilter || (m.campaignName || m.campaignId) === activeCampaignFilter;
         
         let matchesSearch = true;
         if (searchQuery) {
           const text = (m.message || '').toLowerCase();
           const recipient = (m.recipient || '').toLowerCase();
           const campaign = (m.campaignId || '').toLowerCase();
+          const campaignNm = (m.campaignName || '').toLowerCase();
           const vendorId = (m.vendorMessageId || '').toLowerCase();
-          matchesSearch = text.includes(searchQuery) || recipient.includes(searchQuery) || campaign.includes(searchQuery) || vendorId.includes(searchQuery);
+          matchesSearch = text.includes(searchQuery) || recipient.includes(searchQuery) || campaign.includes(searchQuery) || campaignNm.includes(searchQuery) || vendorId.includes(searchQuery);
         }
 
-        return matchesMedium && matchesStatus && matchesSearch;
+        return matchesMedium && matchesStatus && matchesCampaign && matchesSearch;
       });
 
       if (filtered.length === 0) {
@@ -622,11 +789,12 @@ function getDashboardHtml() {
       }
 
       tbody.innerHTML = filtered.map(m => {
+        const campaignDisplay = m.campaignName || m.campaignId;
         return \`
           <tr class="animate-fade-in">
             <td class="msg-mono">\${formatTime(m.timestamp)}</td>
             <td class="msg-mono">\${m.vendorMessageId}</td>
-            <td class="msg-mono" style="color:var(--text-primary)">\${m.campaignId}</td>
+            <td class="msg-mono" style="color:var(--text-primary)" title="\${campaignDisplay}">\${campaignDisplay}</td>
             <td>
               <span class="badge badge-\${m.channel.toLowerCase()}">\${m.channel}</span>
             </td>

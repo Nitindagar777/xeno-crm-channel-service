@@ -7,6 +7,15 @@ const morgan = require('morgan');
 
 const sendRoutes = require('./routes/send.routes');
 const { getActiveCount } = require('./simulator/callbackScheduler');
+const connectDB = require('./utils/db');
+
+// Register Mongoose models
+require('./models/Campaign');
+require('./models/Customer');
+require('./models/CommunicationLog');
+
+// Connect to MongoDB
+connectDB();
 
 const app = express();
 const PORT = process.env.PORT || 5001;

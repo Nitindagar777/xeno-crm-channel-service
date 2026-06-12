@@ -8,6 +8,7 @@ const { simulateOutcome } = require('../simulator/outcomeSimulator');
 exports.handleSend = (req, res) => {
   const {
     campaignId,
+    campaignName,
     customerId,
     message,
     channel,
@@ -48,7 +49,9 @@ exports.handleSend = (req, res) => {
   addMessage({
     vendorMessageId,
     campaignId,
+    campaignName: campaignName || campaignId,
     customerId,
+    userId: req.body.userId || 'N/A',
     message,
     channel,
     recipient: channel === 'email' ? recipientEmail : (recipientPhone || 'N/A'),
