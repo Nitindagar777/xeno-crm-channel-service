@@ -58,8 +58,8 @@ async function simulateOutcome(ctx) {
     });
 
     // --- Step 2: delivery outcome ---
-    if (chancePasses(0.97)) {
-      // 97 % → delivered
+    if (chancePasses(1.0)) {
+      // 100 % → delivered
       const deliveredDelay = randBetween(1000, 3000);
       await wait(deliveredDelay);
       updateMessageStatus(vendorMessageId, 'delivered');
@@ -72,7 +72,7 @@ async function simulateOutcome(ctx) {
         meta: { channel, simulatedDelay: deliveredDelay },
       });
     } else {
-      // 3 % → hard failure (bad number, carrier block, etc.)
+      // 0 % → hard failure (bad number, carrier block, etc.)
       const failDelay = randBetween(500, 1000);
       await wait(failDelay);
       updateMessageStatus(vendorMessageId, 'failed');
